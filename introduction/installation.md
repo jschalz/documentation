@@ -1,41 +1,56 @@
 # Installation
 
-## This is a beta test.
+Follow this guide to install Bulwark.
 
-Before covering the topic of installation, it's important to mention that this is a [beta test](../#this-is-a-beta-test.). Bulwark is not currently recommended for production use-cases.
+> :warning: **WARNING: This is a beta test.**
+>
+> Bulwark is currently in a public [beta test](../#this-is-a-beta-test.). It is not currently recommended for production use-cases.
 
-## Cargo Install
+## Prerequisites
 
-To install Bulwark, you will need the [Rust toolchain installed first](https://www.rust-lang.org/tools/install). We generally recommend installing it via `rustup`. Then Bulwark can be installed via `cargo`:
+Before installing Bulwark, complete the following:
 
-```
-cargo install bulwark-cli
-```
+* Install [rustup](https://rustup.rs/).
+* Install the [Rust toolchain](https://www.rust-lang.org/tools/install).
 
-## GitHub Releases
+## Install
 
-Precompiled CLI binaries may also be downloaded from the project's GitHub [releases](https://github.com/bulwark-security/bulwark/releases).
+### Cargo install
 
-## Docker
+Install Bulwark via `cargo`:
 
-Currently, no official project docker images are being published. Official docker images will be released once Bulwark publishes a version 1.0.0.
+   ```
+   cargo install bulwark-cli
+   ```
 
-## Building
-
-Before building Bulwark, the WebAssembly WASI target is required to be installed.
-
-```
-rustup target add wasm32-wasi
-```
-
-It is otherwise a standard build process.
-
-```
-cargo build --release
-```
-
-The `bulwark-cli` binary will be in the `target/release` directory. Additionally, it is possible to install the `bulwark-cli` binary from the repository's root directory instead of from the published crate:
+To install the `bulwark-cli` binary from the repository's root directory instead of from the published crate, run the following `cargo` command:
 
 ```
 cargo install --path .
 ```
+
+### GitHub releases
+
+Download a precompiled CLI binary from the Bulwark project's GitHub [releases](https://github.com/bulwark-security/bulwark/releases).
+
+### Docker
+
+There are currently no official Bulwark docker images published. 
+
+Official docker images will be released once Bulwark publishes version 1.0.0.
+
+## Build
+
+1. Install the WebAssembly WASI target via `rustup`:
+
+   ```
+   rustup target add wasm32-wasi
+   ```
+
+1. Build Bulwark via `cargo`:
+
+   ```
+   cargo build --release
+   ```
+
+   The `bulwark-cli` binary is built in the `target/release` directory.
