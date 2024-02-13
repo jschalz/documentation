@@ -2,6 +2,10 @@
 
 A quick primer on Bulwark, including architecture, WebAssembly, and plugin communication.
 
+> :warning: **WARNING: This is a beta test.**
+>
+> Bulwark is currently in a public [beta test](../#this-is-a-beta-test.). It is not currently recommended for production use-cases.
+
 ## Architecture
 
 Bulwark is split between two environments: the **host** environment and the **guest** environment.

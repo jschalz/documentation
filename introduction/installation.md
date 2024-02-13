@@ -19,9 +19,9 @@ Before installing Bulwark, complete the following:
 
 Install Bulwark via `cargo`:
 
-   ```
-   cargo install bulwark-cli
-   ```
+```sh
+cargo install bulwark-cli
+```
 
 To install the `bulwark-cli` binary from the repository's root directory instead of from the published crate, run the following `cargo` command:
 
