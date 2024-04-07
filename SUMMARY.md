@@ -4,7 +4,6 @@
 
 * [Overview](README.md)
 * [Installation](introduction/installation.md)
-* [Deployment](introduction/deployment.md)
 * [Core Concepts](introduction/core-concepts/README.md)
   * [Decision Internals](introduction/core-concepts/decision-internals.md)
 * [Getting Started](introduction/getting-started.md)
@@ -12,18 +11,17 @@
 ## Ops
 
 * [Configuration](ops/configuration.md)
+* [Deployment](ops/deployment.md)
 * [CLI](ops/cli.md)
 * [Observability](ops/observability.md)
 
 ## API
 
-* [Building Plugins](api/building-plugins.md)
-* [Reference](api/reference.md)
-* [Bulwark Parameter Schema](api/bulwark-parameter-schema.md)
-
-## Language Support
-
-* [Rust SDK](https://docs.rs/bulwark-wasm-sdk/latest/bulwark\_wasm\_sdk/)
+* [Building Plugins](api/building-plugins/README.md)
+  * [Building Plugins the Hard Way](api/building-plugins/building-plugins-the-hard-way.md)
+* [Reference](api/reference/README.md)
+  * [Rust SDK](https://docs.rs/bulwark-wasm-sdk/latest/bulwark\_wasm\_sdk/)
+* [Bulwark Label Schema](api/bulwark-label-schema.md)
 
 ## Guides
 

@@ -4,6 +4,7 @@ To run the entire Bulwark engine test suite:
 
 ```bash
 cargo test \
+  -p bulwark-build \
   -p bulwark-cli \
   -p bulwark-config \
   -p bulwark-decision \

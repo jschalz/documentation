@@ -6,9 +6,9 @@ description: A quick primer on Bulwark
 
 ## Architecture
 
-Bulwark is split between two environments, the host environment and the guest environment. The host environment is responsible for handling incoming requests and processing plugin decision results. The guest environment is where user-supplied plugin logic runs, producing the decision information that the host acts upon.
+Bulwark's runtime has two distinct environments, the host environment and the guest environment. The host environment is responsible for handling incoming requests and processing plugin decision results. The guest environment is where user-supplied plugin logic runs, producing the decision information that the host acts upon.
 
-The guest environment is sandboxed and can only recruit the host environment to perform special actions on its behalf if explicitly granted a permission to do so. For example, by default, plugins cannot make outbound HTTP requests, or otherwise access the network at all. However the plugin may call a function that causes the host environment to make an HTTP request and return the response it receives, for the specific domains that it's been granted access to. This allows plugins to be executed with confidence, knowing that they'll do nothing more than they've been configured to do.
+The guest environment is sandboxed and can only recruit the host environment to perform special actions on its behalf if explicitly granted permission to do so. For example, by default, plugins cannot make outbound HTTP requests, or otherwise access the network at all. However the plugin may call a function that causes the host environment to make an HTTP request and return the response it receives, for the specific domains that it's been granted access to. This allows plugins to be executed with confidence, knowing that they'll do nothing more than they've been configured to do.
 
 Bulwark currently runs only as an [Envoy external processor](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext\_proc/v3/ext\_proc.proto). Future [roadmap](../../contributing/roadmap.md) plans include support for other deployment patterns for request processing.
 
@@ -22,7 +22,7 @@ WASM enables Bulwark's detection-as-code pattern, where all detections are compi
 
 The Bulwark API offers mechanisms for plugins to extract, store, and retrieve information on a per-request basis. This may be used, for instance, to securely decrypt session cookies, extract stable user ID values, perform anti-fraud scoring lookups, and then incorporate these values into detection logic.
 
-Bulwark executes plugins across several phases, helping it to avoid the need to explicitly declare plugin interdependencies. Plugins may reliably use information made available during an earlier execution phase. Separating responsibility for extracting information from using it within a detection allows for domain-specific information extraction to be subsequently applied to generic or third-party detection logic. To support this use-case, Bulwark defines an [extensible parameter schema](../../api/bulwark-parameter-schema.md).
+Bulwark executes plugins across several phases, helping it to avoid the need to explicitly declare plugin interdependencies. Plugins may reliably use information made available during an earlier execution phase. Separating responsibility for extracting information from using it within a detection allows for domain-specific information extraction to be subsequently applied to generic or third-party detection logic. To support this use-case, Bulwark defines an [extensible parameter schema](../../api/bulwark-label-schema.md).
 
 ## Decisions
 

@@ -1,14 +1,14 @@
 # Observability
 
-## This is a beta test.
+## Request Enrichment
 
-Before covering the topic of observability and monitoring, it's important to mention that this is a [beta test](../#this-is-a-beta-test.). Bulwark is not currently recommended for production use-cases.
+One of the most valuable capabilities that Bulwark introduces for improving visibility for security into your traffic is the concept of request enrichment. Aside from taking accept and restrict actions on traffic, Bulwark plugins also have the ability to annotate traffic with useful tags and labels. Plugins have access to information beyond what comes over the wire. Much more useful contextual information can be injected as a result. These annotations can then be queried using standard observability tools after the fact. Depending on the plugins deployed, this can enable use-cases such as threat hunting, more efficient incident response, and better forensic analysis.
 
-## Logs
+## Structured Logs
 
 Bulwark currently relies on a mix of its own logs and metrics and also [Envoy's metrics](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http\_conn\_man/stats) for observability. Bulwark supports both Prometheus-compatible metrics scraping and StatsD for metrics collection. There are a number of future [roadmap items](../contributing/roadmap.md) related to improving Bulwark's capabilities in this area. Since Bulwark is intended to function as a security observability tool in its own right, this is a development area that will receive significant attention.
 
-Bulwark currently offers two log formats. The first is a structured newline-delimited JSON format that implements the [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/ecs-reference.html) (ECS) specification and is intended for use with centralized log stores and other consumers of [high-cardinality](https://www.cncf.io/blog/2022/05/23/what-is-high-cardinality/) event data. The second is a human-readable multi-line log format intended for debugging use-cases. Other log formats will be introduced in the future, as needed.
+Bulwark currently offers two log formats. The first is a structured newline-delimited JSON format that implements the [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/ecs-reference.html) (ECS) specification and is intended for use with centralized log stores and other consumers of [high-cardinality](https://www.cncf.io/blog/2022/05/23/what-is-high-cardinality/) event data. The second is a human-readable multi-line log format intended for debugging use-cases. Other log formats may be introduced in the future, as needed.
 
 {% tabs %}
 {% tab title="ECS" %}

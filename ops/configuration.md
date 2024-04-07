@@ -1,6 +1,6 @@
 # Configuration
 
-Bulwark uses the [TOML](https://toml.io/) file format for its configuration. Settings are organized into related sections or tables, with some tables being repeatable. The path to the configuration file may be supplied via the `--config` [CLI](cli.md) parameter.
+Bulwark uses the [TOML](https://toml.io/) file format for its configuration. Settings are organized into related sections or tables, with some tables being repeatable. The path to the configuration file may be supplied via the `-c` [CLI](cli.md) parameter.
 
 ## Example Config Files
 
@@ -10,21 +10,21 @@ Bulwark uses the [TOML](https://toml.io/) file format for its configuration. Set
 [service]
 port = 8089
 admin_port = 8090
-remote_state = "redis://127.0.0.1:6379"
+proxy_hops = 1
+
+[state]
+redis_uri = "redis://127.0.0.1:6379"
 
 [thresholds]
-restrict = 0.75
-
-[[include]]
-path = "include.toml"
+observe_only = false
 
 [[plugin]]
-ref = "evil_bit"
-path = "bulwark-evil-bit.wasm"
+ref = "detect_evil_bit"
+path = "dist/plugins/bulwark_evil_bit.wasm"
 
 [[preset]]
 ref = "default"
-plugins = ["evil_bit", "starter_preset"]
+plugins = ["detect_evil_bit"]
 
 [[resource]]
 route = "/"
@@ -37,20 +37,9 @@ plugins = ["default"]
 timeout = 25
 ```
 {% endtab %}
-
-{% tab title="include.toml" %}
-```toml
-[[plugin]]
-ref = "blank_slate"
-path = "bulwark-blank-slate.wasm"
-config = {}
-
-[[preset]]
-ref = "starter_preset"
-plugins = ["blank_slate"]
-```
-{% endtab %}
 {% endtabs %}
+
+***
 
 ## `service`&#x20;
 
@@ -62,7 +51,7 @@ Type: `u16`
 
 Default: `8089`
 
-The port number for the Bulwark primary service. Bulwark's primary service is determined by the subcommand supplied to the [CLI](cli.md).
+The port number for the Bulwark detection service. Bulwark's detection service is determined by the subcommand supplied to the [CLI](cli.md).
 
 ### `admin_port`
 
@@ -70,7 +59,7 @@ Type: `u16`
 
 Default: `8090`
 
-The port number for the Bulwark admin service. The admin service hosts the health check endpoints (`/live`, `/started`, and `/ready`). Further details may be found on the [Deployment](../introduction/deployment.md) page.
+The port number for the Bulwark admin service. The admin service hosts the health check endpoints (`/live`, `/started`, and `/ready`) and metrics. Further details may be found on the [Deployment](deployment.md) page. The admin service is intended to be used for monitoring purposes and should not be exposed to the internet.
 
 ### `admin_enabled`
 
@@ -78,9 +67,27 @@ Type: `bool`
 
 Default: `true`
 
-Determines whether the admin service will be enabled. If set to `false`, only the primary service will be available.
+Determines whether the admin service will be enabled. If set to `false`, only the detection service will be available.
 
-### `remote_state_uri`
+### `proxy_hops`
+
+Type: `u8`
+
+Default: `0`
+
+The number of trusted proxy hops in front of, or exterior to, the Bulwark detection service. Bulwark's own proxy hop or the hop of the proxy hosting Bulwark would not be counted. This setting determines which client IP will be reported to the plugin guest environment when parsing the `Forwarded` or `X-Forwarded-For` HTTP header.
+
+{% hint style="danger" %}
+If Bulwark is deployed in conjunction with a load balancer or with another proxy exterior to it and the `proxy_hops` setting is not updated to reflect this, some Bulwark plugins may attempt to block traffic from trusted proxy sources whenever malicious traffic from any source is detected.
+{% endhint %}
+
+***
+
+## `state`&#x20;
+
+The configuration for state managed by Bulwark plugins are organized under the `state` table.
+
+### `redis_uri`
 
 Type: `String`
 
@@ -90,7 +97,7 @@ An optional setting that enables the use of Bulwark's remote state feature. It s
 While this setting is optional and disabled by default, it is highly recommended that Bulwark be used with it enabled. Much of Bulwark's capabilities are derived from it.
 {% endhint %}
 
-### `remote_state_pool_size`
+### `redis_pool_size`
 
 Type: `u32`
 
@@ -98,17 +105,45 @@ Default: `16`
 
 The size of the connection pool to use when accessing remote state.
 
-### `proxy_hops`
+***
 
-Type: `u8`
+## `thresholds`
 
-Default: `0`
+The configurable decision thresholds are organized under the `thresholds` table.
 
-The number of trusted proxy hops in front of, or exterior to, the Bulwark primary service. Bulwark's own proxy hop or the hop of the proxy hosting Bulwark would not be counted. This setting determines which client IP will be reported to the plugin guest environment when parsing the `Forwarded` or `X-Forwarded-For` HTTP header.
+### `observe_only`
 
-{% hint style="danger" %}
-If Bulwark is deployed in conjunction with a load balancer or with another proxy exterior to it and the `proxy_hops` setting is not updated to reflect this, some Bulwark plugins may attempt to block traffic from trusted proxy sources whenever malicious traffic from any source is detected.
-{% endhint %}
+Type: `bool`
+
+Default: `false`
+
+Disables blocking of requests. If set, Bulwark will allow all requests through, regardless of the outcome determined by its plugins. It will still calculate a verdict, it will still inject headers readable by interior services, plugin-specific side-effects may still occur, but Bulwark will not otherwise take action on an incoming request. This can be used to perform initial evaluation of Bulwark without concern for false positives.
+
+### `restrict`
+
+Type: `f64`
+
+Default: `0.8`
+
+The decision score lower-bound for blocking a request. Any decision risk score above this threshold will be blocked if Bulwark is in blocking mode.
+
+### `suspicious`
+
+Type: `f64`
+
+Default: `0.6`
+
+The decision score lower-bound for marking a request as suspicious. Any decision risk score above this threshold will be marked as suspicious. Suspicious requests are not blocked, but they may be queried and manually inspected and plugins may use them in the context of feedback loops to inform future decision-making.
+
+### `trust`
+
+Type: `f64`
+
+Default: `0.2`
+
+The decision score upper-bound for marking a request as trusted. Any decision risk score value below this threshold will be marked as trusted. Trusted requests are not handled differently than accepted requests, but plugins may use them in the context of feedback loops to inform future decision-making.
+
+***
 
 ## `metrics`
 
@@ -154,41 +189,7 @@ Type: `String`
 
 A prefix to apply to StatsD metrics names.
 
-## `thresholds`
-
-The configurable decision thresholds are organized under the `thresholds` table.
-
-### `observe_only`
-
-Type: `bool`
-
-Default: `false`
-
-Disables blocking of requests. If set, Bulwark will allow all requests through, regardless of the outcome determined by its plugins. It will still calculate a verdict, it will still inject headers readable by interior services, plugin-specific side-effects may still occur, but Bulwark will not otherwise take action on an incoming request. This can be used to perform initial evaluation of Bulwark without concern for false positives.
-
-### `restrict`
-
-Type: `f64`
-
-Default: `0.8`
-
-The decision score lower-bound for blocking a request. Any decision risk score above this threshold will be blocked if Bulwark is in blocking mode.
-
-### `suspicious`
-
-Type: `f64`
-
-Default: `0.6`
-
-The decision score lower-bound for marking a request as suspicious. Any decision risk score above this threshold will be marked as suspicious. Suspicious requests are not blocked, but they may be queried and manually inspected and plugins may use them in the context of feedback loops to inform future decision-making.
-
-### `trust`
-
-Type: `f64`
-
-Default: `0.2`
-
-The decision score upper-bound for marking a request as trusted. Any decision risk score value below this threshold will be marked as trusted. Trusted requests are not handled differently than accepted requests, but plugins may use them in the context of feedback loops to inform future decision-making.
+***
 
 ## `include`
 
@@ -200,15 +201,17 @@ Type: `String`
 
 The relative path of the configuration file to be included. The path is resolved relative to the configuration file that is performing the include.
 
+***
+
 ## `plugin`
 
-Configuration for an individual plugin. Multiple `plugin` tables may appear in a configuration file. Additionally, multiple `plugin` tables that point to the same file `path` may appear, as long as they have different `reference` values. This is typically used to supply different guest configurations to the same plugin implementation.
+Configuration for an individual plugin. Multiple `plugin` tables may appear in a configuration file. Additionally, multiple `plugin` tables that point to the same file `path` may appear, as long as they have different `reference` values. This is typically used to supply different configurations to the same plugin implementation.
 
 ### `reference`
 
 Type: `String`
 
-A unique identifier that should be both human-readable and machine-readable, for a specific plugin and its associated configuration. Should only include ASCII lowercase a-z and underscore (\_) characters.
+A unique identifier that should be both human-readable and machine-readable, for a specific plugin and its associated configuration. Should only include ASCII lowercase a-z and underscore (\_) characters. Must be unique across both `plugin` and `preset` tables.
 
 ### `path`
 
@@ -226,7 +229,7 @@ Type: `f64`
 
 Default: `1.0`
 
-A weight factor which this plugin's decisions will be multiplied by. This may be used to tune results from a plugin without recompiling it. In particular, values below 1.0 may be used to scale down the output of the `set_accepted` or `set_restricted` host calls, which would otherwise only output a maximum value.
+A [weight factor](../introduction/core-concepts/decision-internals.md#weighting) which this plugin's decisions will be multiplied by. This may be used to tune results from a plugin without recompiling it. In particular, values below 1.0 may be used to scale down a decision.
 
 ### `config`
 
@@ -256,15 +259,17 @@ The `http` permission grant is a list of URI host values that may be used when s
 
 The `state` permission grant is a list of Redis key prefixes that may be accessed when using Bulwark's remote state feature.
 
+***
+
 ## `preset`
 
-A preset is a reusable grouping of plugins and other presets that can be used to reduce repetition within Bulwark's configuration. A good practice is to create a default preset that provides generic protection, and then use more specialized plugin lists on a per-resource basis, where needed.
+A preset is a reusable grouping of plugins and other presets that can be used to reduce repetition within Bulwark's configuration. A good practice is to create a default preset that provides generic protection, and then use more specialized plugin lists on a per-resource basis, where needed. Multiple preset tables may be used.
 
 ### `reference`
 
 Type: `String`
 
-A unique identifier that should be both human-readable and machine-readable, for a specific preset and its associated configuration. Should only include ASCII lowercase a-z and underscore (\_) characters.
+A unique identifier that should be both human-readable and machine-readable, for a specific preset and its associated configuration. Should only include ASCII lowercase a-z and underscore (\_) characters. Must be unique across both `plugin` and `preset` tables.
 
 ### `plugins`
 
@@ -272,13 +277,15 @@ Type: `Vec<String>`
 
 A list of plugin reference values or other preset references that this preset should represent. Circular references are not allowed. Reference types may be a mix of plugin and preset references.
 
+***
+
 ## `resource`
 
 A resource in Bulwark's configuration is a mapping between an endpoint and the set of plugins that will be applied to incoming requests for it. Resource tables may also be used to control how latency-sensitive Bulwark should be on a per-endpoint basis.
 
 ### `route`
 
-The route pattern that this resource should match. Route patterns may capture parameters, which will be made accessible to plugins via the `get_param_value` function in the API. Single path parameters may be captured with a `:` sigil character and multiple path parameters may be captured with a `*` sigil character. Query strings are ignored for matching, but may be inspected by plugins.
+The route pattern that this resource should match. Route patterns may capture parameters, which will be made accessible to plugins via their parameter arguments in the API. Single path parameters may be captured with a `:` sigil character and multiple path parameters may be captured with a `*` sigil character. Query strings are ignored for matching, but may be inspected by plugins.
 
 Routes within Bulwark match only the request. An interior service does not need to respond to the same or even similar route patterns, and in some cases, Bulwark's configured routes may correspond as much to threat patterns as they do to the shape of the interior services.
 

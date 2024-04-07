@@ -2,26 +2,26 @@
 description: An extensible schema definition for inter-plugin communication
 ---
 
-# Bulwark Parameter Schema
+# Bulwark Label Schema
 
 ## Overview
 
-To support communication between plugins without the need to explicitly declare plugin dependencies, it is recommended that plugins name and format parameters according to this schema definition. Plugins may name parameter values that do not appear in this schema, with the expectation that out-of-band coordination between plugins may be required in such cases. Ideally, such extensions should be namespaced appropriately, e.g. `plugin_name.extension`. This schema is inspired by the [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/ecs-reference.html) (ECS) and while much of ECS is inapplicable to this use-case, it may still be used as a reference for any gaps. Bulwark also uses ECS for [logging and observability](../ops/observability.md).
+To support communication between plugins without the need to explicitly declare plugin dependencies, it is recommended that plugins name and format labels according to this schema definition. Plugins may use label names that do not appear in this schema, with the expectation that out-of-band coordination between plugins may be required in such cases. Ideally, such extensions should be namespaced appropriately, e.g. `plugin_name.extension`. This schema is inspired by the [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/ecs-reference.html) (ECS) and while large swaths of ECS are inapplicable to this use-case, it may still be used as a reference for any gaps. Bulwark also uses ECS for [logging and observability](../ops/observability.md).
 
 This schema is incomplete and suggestions for expanding it are welcomed. Refer to the [ECS guidelines for naming](https://www.elastic.co/guide/en/ecs/current/ecs-guidelines.html#\_guidelines\_for\_field\_names).
 
 ## Schema Reference
 
-* `param.*`
-  * These parameters will automatically be set by the host environment when extracted by the configured [resource route patterns](../ops/configuration.md#route).
+* `route.*`
+  * These labels will automatically be set by the host environment when extracted by the configured [resource route patterns](../ops/configuration.md#route).
 * `user.id`
-  * A unique identifier for the user record. May be used in conjunction with rate-limiting plugins, anti-fraud plugins, or any other use-case that benefits from a stable identifier which is independent of network or device information. If this value is an email address, the `user.email` parameter value should also be populated with the same value.
+  * A unique identifier for the user record. May be used in conjunction with rate-limiting plugins, anti-fraud plugins, or any other use-case that benefits from a stable identifier which is independent of network or device information. If this value is an email address, the `user.email` label value should also be populated with the same value.
 * `user.email`
   * The email address for the user record.
 * `user.name`
   * The short name, or username, for the user record.
 * `user.hash`
-  * In some cases, `user.id`, `user.email`, and `user.name` parameter values may be disallowed by policy. The `user.hash` value should be a privacy-preserving hash value that anonymizes the user while retaining most or all of the ability to uniquely identify the user.
+  * In some cases, usage of `user.id`, `user.email`, and/or `user.name` label values may be disallowed by an organization policy. The `user.hash` value should be a privacy-preserving hash value that anonymizes the user while retaining most or all of the ability to differentiate users.
 * `client.as.number`
   * Unique number allocated to the autonomous system. The autonomous system number (ASN) uniquely identifies each network on the Internet.\
     \
