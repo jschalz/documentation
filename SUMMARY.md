@@ -20,7 +20,7 @@
 * [Building Plugins](api/building-plugins/README.md)
   * [Building Plugins the Hard Way](api/building-plugins/building-plugins-the-hard-way.md)
 * [Reference](api/reference/README.md)
-  * [Rust SDK](https://docs.rs/bulwark-wasm-sdk/latest/bulwark\_wasm\_sdk/)
+  * [Rust SDK](https://docs.rs/bulwark-sdk/latest/bulwark\_sdk/)
 * [Bulwark Label Schema](api/bulwark-label-schema.md)
 
 ## Guides
